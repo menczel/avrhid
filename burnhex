@@ -1,0 +1,20 @@
+#!/bin/bash
+port=/dev/ttyACM0
+conf=./bin/avrdude.conf
+burn=./bin/avrdude
+hexfile=$1
+
+if [[ -z "${hexfile// }" ]]; then
+  echo No HEX file specified, aborting
+else
+  echo Burning firmware $1.hex to the Leonardo board.
+
+  echo
+  read -p "Press the board's reset button and immediately press ENTER"
+
+  sleep 2
+  /usr/bin/python ./reset_board.py $port
+  sleep 2
+  $burn -C$conf -p atmega32u4 -c avr109 -P $port -b 57600 -D -V \
+        -Uflash:w:./build/$1.hex:i
+fi

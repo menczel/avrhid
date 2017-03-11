@@ -1,0 +1,299 @@
+<!doctype html public "-//w3c//dtd html 3.2//en">
+
+<html>
+<head>
+
+  <title>AVRHID Notes</title>
+  <meta name="keywords" content="">
+  <meta name="Generator" content="HTMLpad">
+</head>
+
+<body bgcolor=#e8e8d8>
+<font face=arial size=4>
+
+<h2>AVRHID: USB HID for the Atmega32u4 (Arduino)</h2>
+
+<b>Copyright (C) 2017 Laszlo Menczel</b> (laszlo.menczel@gmail.com)
+
+<p><b>DISCAIMER:</b> AVRHID is provided free of charge with NO WARRANTY. You
+use it at your own risk. Licensing terms are stated at the beginning of each
+source file.
+
+<!------------------------------------------------------------------------------------------------>
+<hr align="left" size="4" color="a00000">
+
+<h3>Table of Contents</h3>
+
+<ul>
+<a href=avrhid.html#intro>Introduction</a><br>
+<br>
+
+<a href=avrhid.html#ratio>Rationale</a><br>
+<br>
+
+<a href=avrhid.html#source>Sources</a><br>
+<br>
+
+<a href=avrhid.html#conf>Device configuration</a><br>
+<br>
+
+<a href=avrhid.html#newjoy>Adding code for new joystick types</a><br>
+<br>
+
+<a href=avrhid.html#build>Building the program</a><br>
+<br>
+
+<a href=avrhid.html#burn>Burning the program to the board</a><br>
+<br>
+
+<a href=avrhid.html#todo>TODO</a><br>
+<br>
+
+</ul>
+
+<!------------------------------------------------------------------------------------------------>
+<hr align="left" size="2" color="808080">
+
+<a name=intro>
+<h3>Introduction</h3>
+
+<p>This program implements USB HID devices (mouse, keyboard and joystick).
+The target is the Atmega32u4 MCU used in the Arduino Leonardo and Micro
+boards. At present the following devices are implemented:
+
+<pre><tt>
+  keyboard with 101 keys including 8 modifier keys
+
+  mouse with three buttons and a wheel
+  
+  joystick with 16 buttons, X and Y axis, throttle and rudder controls
+  and an 8-position HAT switch
+</tt></pre>
+
+<p>The code is supposed to be compiled by the avr-gcc compiler suite. There
+is a Makefile for building the program from the command line. I have tested
+the build process only under Linux (Xubuntu 64-bit 16.04). In principle
+it should work under other operating systems as well provided that the
+avr-gcc toolchain is installed.
+
+<p>This program is for serious developers who prefer the traditional way of
+making software and don't want to use the simplistic Arduino IDE made for
+beginners. A nice tutorial by Ashley Mills about the use of C/C++ (avr-gcc)
+for AVR programming can be found at the following WEB site:
+<br><br>
+
+<a href="https://www.ashleymills.com/node/327">https://www.ashleymills.com/node/327</a>
+<br><br>
+
+<!------------------------------------------------------------------------------------------------>
+<hr align="left" size="2" color="808080">
+
+<a name=ratio>
+<h3>Rationale</h3>
+
+<p>I have put together this package because I noticed that it is quite
+difficult to find simple and easy to understand C code that would implement
+the HID devices keyboard, mouse and joystick on Atmega MCUs. Good quality
+joystick implementations are especially rare. You can find a lot of code
+on the WEB for implementing a USB joystick but most of it is IMHO garbage.
+These are usually perfunctorily stiched together packages using code from several
+different sources and contain lots of unneeded code that makes the whole
+stuff difficult to understand. In most cases documentation is non-existent
+or very sketchy. And some of these packages simply don't work at all
+(cannot be compiled or run).
+
+<p>HID devices are implemented in the Arduino and Teensyduino IDEs but if
+you want to do traditional programmming by using the avr-gcc you are out of
+luck. People on forums suggest to use the LUFA library. Well, it does work
+but IMHO it is far from being simple (concerning either code or usage)
+regardless of claims to the contrary made on different forums.
+<br><br>
+
+<!------------------------------------------------------------------------------------------------>
+<hr align="left" size="2" color="808080">
+
+<a name=source>
+<h3>Sources</h3>
+
+<p>Keyboard and mouse code are based on the following two code packages
+from the PJRC.COM company:
+<br><br>
+
+<a href="https://www.pjrc.com/teensy/usb_keyboard.html">Keyboard example for the Teensy USB Development Board</a>
+<br>
+<a href="https://www.pjrc.com/teensy/usb_mouse.html">Mouse example with debug channel for Teensy USB Development Board</a>
+
+<p>HID report descriptor examples for joysticks were taken from code I have
+downloaded from the following site:
+<br><br>
+
+<a href="https://github.com/Cryocrat/LeonardoJoystick">https://github.com/Cryocrat/LeonardoJoystick</a>
+
+<p>I got two files (HID.cpp and USBAPI.h) to which joystick code was added
+by Peter Barrett and extracted the joystick descriptor to use in my HID
+code.
+<br><br>
+
+<!------------------------------------------------------------------------------------------------>
+<hr align="left" size="2" color="808080">
+
+<a name=conf>
+<h3>Device configuration</h3>
+
+<p>You can configure the program for different boards and HID devices.
+
+<p><b>Board type</b>
+<br>
+At present two Arduino boards are supported: Leonardo and Micro. Set
+BOARD_TYPE in the Makefile to the desired value by uncommenting the
+appropriate statement. Configuring the board type will automatically
+set the product ID of the HID device to the correct value.
+
+<p><b>HID device type</b>
+<br>
+You may specify one of the HID types HID_MOUSE, HID_KEYBOARD or HID_JOYSTICK
+by uncommenting the appropriate statement in the Makefile. Please note that
+only one type may be defined. Consequently any compiled instance of the
+program supports exactly <b>one</b> HID type depending on the setting of this
+value. Composite USB devices (e.g. mouse + keyboard) cannot be handled by
+this program.
+<br><br>
+
+<!------------------------------------------------------------------------------------------------>
+<hr align="left" size="2" color="808080">
+
+<a name=newjoy>
+<h3>Adding code for new joystick types</h3>
+
+<p>If you need a custom joystick with a different number of buttons, controls
+and axis you have to modify two source files: <b>hid_joy.c</b> and
+<b>hid_joy.h</b>.
+
+<p>In <b>hid_joy.c</b> you should edit the HID report descriptor structure to
+correspond to the number of controls (buttons, axis, etc.) you want to
+implement. You should also modify the function <b>copy_report_to_buf</b>
+so that it correctly copies the actual values from <b>joy_state</b> to the
+hardware USB buffer of the MCU.
+
+<p>In <b>hid_joy.h</b> you should set the constant HID_REPORT_SIZE to the
+new size of the structure you edited in <b>hid_joy.c</b>. The <b>joy_state_t</b>
+structure must also be modified so that it corresponds to your new setup.
+
+<p>You should also revise the test program <b>dev_joy.c</b> for possible
+code changes.
+
+<p><b>Note:</b>
+<br><br>
+
+1. Similar modifications should be made to the <b>hid_kbd</b> or <b>hid_mou</b>
+source files if you want to implement a different keyboard or mouse device.
+<br><br>
+
+2. The maximum size of report that can be copied to the hardware buffer
+(i.e. the number of bytes sent, NOT the size of the HID report descriptor)
+is 8 bytes for a keyboard or a mouse and 64 bytes for a joystick. Please
+do not exceed these limits!
+<br><br>
+
+<!------------------------------------------------------------------------------------------------>
+<hr align="left" size="2" color="808080">
+
+<a name=build>
+<h3>Building the program</h3>
+
+<p>You must have the avr-gcc package installed on your computer. You should
+get it from the software repository of your distribution.
+
+<p>In a terminal navigate to the directory where the Makefile of the
+program is located and run the command <b>make</b>. If everything
+is OK the program is created in the subdirectory <b>build</b>. The name of
+the program will be <b>usb_keyboard.hex</b>, <b>usb_mouse.hex</b> or
+<b>usb_joystick.hex</b> depending on your device setting.
+
+<p>Three other <b>make</b> targets are available:
+
+<pre><tt>
+  make clean --> removes all files created by the build process except the
+                 dependency files
+
+  make xclean -> removes all files created by the build process
+
+  make blink --> builds the minimal LED blinking program 'blink'
+</tt></pre>
+
+<p><b>blink.hex</b> can be used to reset the board to its factory state
+(i.e. loaded with a a blink sketch and USB connection activated).
+<br><br>
+
+<!------------------------------------------------------------------------------------------------>
+<hr align="left" size="2" color="808080">
+
+<a name=burn>
+<h3>Burning the program to the board</h3>
+
+<p>Connect your board to an USB port. Open a terminal and navigate to the
+directory where the Makefile is located. Start the burning script:
+
+<pre><tt>
+  ./burnhex image-name
+</tt></pre>
+
+where <b>image-name</b> is the name of the HEX file created by the build
+process (in the subdirectory <b>build</b>) w/o the <b>.hex</b> extension.
+
+<p>After the script starts you have to press the reset button of the board
+and then immediately press ENTER (these instructions are displayed on the
+screen).
+
+<p>You can start your burned program by disconnecting the board and connecting
+it again.
+
+<p><b>Notes:</b>
+
+<p>1. You have to specify in the <b>burnhex</b> script the serial port to
+which the board connects when it is reset. Currently it is set to
+<b>/dev/ttyACM0</b>. You can find the name of the port in the following way:
+
+<pre><tt>
+  - Connect the board to an USB port
+
+  - In a terminal run <b>tail -f /var/log/syslog</b>
+
+  - Press the reset button on the board
+
+  - <b>tail</b> will display a couple of new lines about a new USB device
+
+  - In the text printed by <b>tail</b> find the name of the port used 
+    (mine was <b>/dev/ttyACM0</b> but it may be different on your machine)
+
+  - Edit the file <b>burnhex</b> to set the variable <b>port</b> to this value
+</tt></pre>
+
+<p>2. You should have <b>python</b> and <b>python-serial</b> installed
+because the <b>burnhex</b> script uses the python script <b>reset_board.py</b>
+to set up the board for programming (see the content of the script if you want
+to know what is done).
+
+<p>3. The subdirectory <b>bin</b> contains the <b>avrdude</b> programmer
+utility and its configuration file. That's all you need to burn a HEX image.
+There is no need to download the whole Arduino IDE (around 160 MB) just to
+get this simple utility program. I have already done it for you. :) 
+<br><br>
+
+<!------------------------------------------------------------------------------------------------>
+<hr align="left" size="2" color="808080">
+
+<a name=todo>
+<h3>TODO</h3>
+
+<p>1. Try building the program under Windows 7/8 using <b>winavr</b> (the main
+hurdle here will be finding out which COM port the board uses when it
+is reset for programming)
+
+<p>2. Extend the set of boards usable with the program. This could include
+the Teensy2 and Teensy3 as well as Arduino boards that have an MCU with
+built-in USB support similar to the Atmega32u4.
+
+</font>
+</body>
+</html>
