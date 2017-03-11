@@ -1,3 +1,12 @@
+/*
+  blink.c
+  Copyright (C) 2017 Laszlo Menczel
+
+  This is free software distributed under the terms of the MIT license
+  (see the file LICENSE or https://opensource.org/licenses/MIT).
+ 
+*/
+
 #include <avr/io.h>
 #include <avr/pgmspace.h>
 #include <avr/interrupt.h>
