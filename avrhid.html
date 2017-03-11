@@ -276,8 +276,11 @@ to know what is done).
 
 <p>3. The subdirectory <b>bin</b> contains the <b>avrdude</b> programmer
 utility and its configuration file. That's all you need to burn a HEX image.
-There is no need to download the whole Arduino IDE (around 160 MB) just to
-get this simple utility program. I have already done it for you. :) 
+This is a 64-bit Linux program (from Ubuntu). If you run a 32-bit Linux
+you have to get the 32-bit version of avrdude. Then you can either replace
+the file <b>avrdude</b> in <b>bin</b> or modify the variables <b>conf</b>
+and <b>burn</b> in the <b>burnhex</b> script to point to the newly installed
+program and config files.
 <br><br>
 
 <!------------------------------------------------------------------------------------------------>
